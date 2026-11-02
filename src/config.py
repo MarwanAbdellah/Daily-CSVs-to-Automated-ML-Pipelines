@@ -9,6 +9,10 @@ load_dotenv()
 # Repository root locally, /opt/airflow inside the containers (src/ is mounted there)
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
+# Airflow Asset emitted by data_pipeline after a valid Gold partition; it
+# schedules ml_training_pipeline
+GOLD_ASSET_NAME = "gold_orders"
+
 
 @dataclass(frozen=True)
 class Settings:

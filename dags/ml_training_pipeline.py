@@ -2,16 +2,17 @@
 
 load_gold_data -> train_model -> evaluate_model -> save_model
 
-Triggered manually once data_pipeline has produced valid Gold partitions.
+Scheduled on the ``gold_orders`` Asset: it runs automatically after every
+valid Gold update from data_pipeline, and can still be triggered manually.
 Tasks hand over small summaries via XCom; data and the candidate model travel
 through files in data/ml/.
 """
 
 from datetime import datetime, timedelta
 
-from airflow.sdk import dag, task
+from airflow.sdk import Asset, dag, task
 
-from src.config import settings
+from src.config import GOLD_ASSET_NAME, settings
 from src.logging_config import configure_logging
 from src.train import evaluate_model, load_gold_data, save_model, train_model
 
@@ -21,7 +22,7 @@ configure_logging(settings.log_level)
 @dag(
     dag_id="ml_training_pipeline",
     description="Gold -> time-based split -> sklearn Pipeline -> metrics -> joblib",
-    schedule=None,
+    schedule=[Asset(GOLD_ASSET_NAME)],
     start_date=datetime(2026, 10, 1),
     catchup=False,
     max_active_runs=1,
