@@ -182,11 +182,13 @@ def evaluate_model(cfg: Settings = settings) -> dict[str, Any]:
 
 
 def save_model(cfg: Settings = settings) -> dict[str, Any]:
-    """Publish the evaluated candidate as the fixed-name model + metrics files."""
+    """Publish the evaluated candidate: fixed-name artifacts plus a version."""
     candidate = cfg.ml_dir / CANDIDATE_MODEL_FILE
     combined = _combined(cfg)
     now = datetime.now(timezone.utc)
+    version = now.strftime("v%Y%m%dT%H%M%SZ")
     report = ModelReport(
+        model_version=version,
         model_type="LogisticRegression(class_weight='balanced') in a sklearn Pipeline",
         trained_at=now.isoformat(timespec="seconds"),
         gold_rows=len(combined),
@@ -207,6 +209,12 @@ def save_model(cfg: Settings = settings) -> dict[str, Any]:
     os.replace(tmp, cfg.model_path)
     _write_json(report.to_dict(), cfg.metrics_path)
 
+    # immutable copy per training run; the fixed-name files always point at the latest
+    version_dir = cfg.models_dir / "versions" / version
+    version_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(candidate, version_dir / "model.joblib")
+    _write_json(report.to_dict(), version_dir / "metrics.json")
+
     # self-check: the published artifact must reproduce the candidate's predictions
     _, test, _ = time_split(combined, cfg.test_fraction)
     X_test = _features(test)
@@ -214,7 +222,9 @@ def save_model(cfg: Settings = settings) -> dict[str, Any]:
         joblib.load(cfg.model_path).predict(X_test)
         == joblib.load(candidate).predict(X_test)
     ).all(), "saved model does not reproduce the evaluated candidate"
-    logger.info("Saved %s and %s", cfg.model_path, cfg.metrics_path)
+    logger.info(
+        "Saved %s and %s (version %s)", cfg.model_path, cfg.metrics_path, version
+    )
     return report.to_dict()
 
 

@@ -1,6 +1,7 @@
 {
+  "model_version": "v20261102T130649Z",
   "model_type": "LogisticRegression(class_weight='balanced') in a sklearn Pipeline",
-  "trained_at": "2026-11-02T12:52:06+00:00",
+  "trained_at": "2026-11-02T13:06:49+00:00",
   "gold_rows": 1635,
   "gold_partitions": 8,
   "features": {
