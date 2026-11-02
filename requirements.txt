@@ -1,9 +1,11 @@
 # Installed on top of apache/airflow:3.3.2-python3.12 with the matching
-# constraints file (see Dockerfile). Airflow already ships pandas; it is listed
-# so the version is pinned explicitly.
+# constraints file (see Dockerfile). Airflow already ships pandas, SQLAlchemy
+# and psycopg2; they are listed so the versions are pinned explicitly.
 joblib==1.6.0
 pandas==3.0.5
 python-dotenv==1.2.3
 scikit-learn==1.9.1
+SQLAlchemy==2.0.52
+psycopg2-binary==2.9.13
 # Lets the test suite (including the DAG integrity tests) run in the container
 pytest==8.4.2

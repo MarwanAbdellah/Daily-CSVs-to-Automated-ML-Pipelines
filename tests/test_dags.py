@@ -33,6 +33,7 @@ def test_no_import_errors(dagbag):
                 "transform_to_silver",
                 "prepare_gold",
                 "validate_gold",
+                "load_gold_to_postgres",
             ],
         ),
         (

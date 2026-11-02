@@ -1,6 +1,7 @@
 """Daily medallion pipeline: one raw CSV per logical date -> Bronze/Silver/Gold.
 
 extract_to_bronze -> transform_to_silver -> prepare_gold -> validate_gold
+    -> load_gold_to_postgres
 
 A passing validate_gold updates the ``gold_orders`` Asset, which schedules
 ml_training_pipeline automatically.
@@ -15,6 +16,7 @@ from datetime import date, datetime, timedelta
 from airflow.sdk import Asset, dag, get_current_context, task
 
 from src.config import GOLD_ASSET_NAME, settings
+from src.db import load_gold_partition
 from src.etl import (
     extract_to_bronze,
     maybe_simulate_failure,
@@ -38,7 +40,7 @@ def _batch_date() -> date:
 
 @dag(
     dag_id="data_pipeline",
-    description="Daily orders CSV -> Bronze -> Silver -> Gold -> validation",
+    description="Daily orders CSV -> Bronze -> Silver -> Gold -> validate -> Postgres",
     schedule="@daily",
     start_date=datetime(2026, 10, 1),
     end_date=datetime(2026, 11, 15),
@@ -66,10 +68,15 @@ def data_pipeline():
     def validate_gold_task(gold: dict) -> dict:
         return validate_gold(parse_batch_date(gold["batch_date"])).to_dict()
 
+    @task
+    def load_gold_to_postgres_task(report: dict) -> int:
+        return load_gold_partition(parse_batch_date(report["batch_date"]))
+
     bronze = extract_to_bronze_task.override(task_id="extract_to_bronze")()
     silver = transform_to_silver_task.override(task_id="transform_to_silver")(bronze)
     gold = prepare_gold_task.override(task_id="prepare_gold")(silver)
-    validate_gold_task.override(task_id="validate_gold")(gold)
+    report = validate_gold_task.override(task_id="validate_gold")(gold)
+    load_gold_to_postgres_task.override(task_id="load_gold_to_postgres")(report)
 
 
 data_pipeline()

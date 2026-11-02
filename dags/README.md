@@ -15,6 +15,8 @@ Both DAGs use `retries=2` with a 30-second `retry_delay`.
 - Each task returns a `LayerResult` / `ValidationReport` as a small dict. That dict goes to XCom and is visible in the UI.
 - `extract_to_bronze` calls `maybe_simulate_failure`. When the batch date is listed in `SIMULATE_FAILURE_DATES`, the first attempt fails on purpose. This is safe retry evidence and is off by default.
 
+- `load_gold_to_postgres` (bonus) runs only after validation passes. It replaces the date's rows in `processed.gold_orders`.
+
 ## `ml_training_pipeline.py`
 
 - Scheduled on the `gold_orders` Asset (name in `src/config.py::GOLD_ASSET_NAME`). `validate_gold` in `data_pipeline` lists it as an outlet, so training starts automatically after every valid Gold update. A failed validation never updates the Asset, so it never triggers training.
