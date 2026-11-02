@@ -138,11 +138,19 @@ cd Daily-CSVs-to-Automated-ML-Pipelines && cp .env.example .env
 docker compose up -d --build
 ```
 
-Open http://localhost:8080 and log in as `airflow` / `airflow` (set in `.env`). Then, with every command run inside the scheduler container:
+The first start builds the image and takes a few minutes. Copying `.env` is optional, since every setting has a working default, but it is where you change them.
+
+Open http://localhost:8080 and log in as `airflow` / `airflow`. DAGs start **paused**, so unpause **both** of them, either with the toggles in the UI or with these commands. `ml_training_pipeline` must be unpaused for the automatic trigger to work.
 
 ```bash
 docker compose exec airflow-scheduler airflow dags unpause data_pipeline
 ```
+
+```bash
+docker compose exec airflow-scheduler airflow dags unpause ml_training_pipeline
+```
+
+If today falls inside the DAG's 2026-10-01 → 2026-11-15 window, unpausing `data_pipeline` also creates one scheduled run for today; that is expected. Then trigger dated runs:
 
 ```bash
 docker compose exec airflow-scheduler airflow dags trigger data_pipeline --logical-date 2026-10-01T00:00:00+00:00

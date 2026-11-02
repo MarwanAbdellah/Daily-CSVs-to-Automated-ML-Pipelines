@@ -1,0 +1,6 @@
+# Same line endings on every OS, so pipeline reruns on Windows checkouts
+# do not show committed CSV/JSON outputs as modified
+* text=auto eol=lf
+*.joblib binary
+*.zip binary
+*.pdf binary
