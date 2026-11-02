@@ -106,15 +106,15 @@ Three dated batches were inspected in pandas, then the whole dataset:
 * **Pipeline**: `ColumnTransformer` (numeric: median impute + `StandardScaler`; categorical: most-frequent impute + `OneHotEncoder(handle_unknown="ignore")`) → `LogisticRegression(class_weight="balanced")`.
   * The whole pipeline is fitted on training rows only.
   * The balanced class weights handle the 76/24 imbalance, which favours recall on late orders.
-* **Artifacts**: `models/delivery_delay_model.joblib` and `metrics/metrics.json`. The metrics file records accuracy / precision / recall / F1, the confusion matrix, the split strategy, the train/test dates and row counts, and the feature lists. After saving, a round-trip check confirms the reloaded model reproduces the evaluated predictions.
+* **Artifacts**: `models/delivery_delay_model.joblib` and `metrics/metrics.json`. The metrics file records accuracy / precision / recall / F1, the confusion matrix, the split strategy, the train/test dates and row counts, and the feature lists. **Versioning** (`feature/model-versioning`): every run also stores `models/versions/<UTC timestamp>/{model.joblib,metrics.json}`, and `metrics.json` carries the `model_version`. After saving, a round-trip check confirms the reloaded model reproduces the evaluated predictions.
 
-### Results (current run: 8 Gold dates)
+### Results (current run: 9 Gold dates, version v20261102T144339Z)
 
 | Split | Train rows | Test rows | Accuracy | Precision | Recall | F1 |
 |---|---|---|---|---|---|---|
-| latest 2 of 8 dates held out | 1,236 | 399 | 0.694 | 0.313 | 0.687 | 0.430 |
+| latest 2 of 9 dates held out | 1,455 | 399 | 0.689 | 0.311 | 0.702 | 0.431 |
 
-The model catches about 69 % of late deliveries at the cost of false alarms. That is a sensible trade-off when a missed late order costs more than a proactive customer notice.
+The model catches about 70 % of late deliveries at the cost of false alarms. That is a sensible trade-off when a missed late order costs more than a proactive customer notice.
 
 ## Setup and reproduction
 
