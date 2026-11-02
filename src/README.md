@@ -8,6 +8,7 @@ Reusable, Airflow-free Python package. The DAGs in [`dags/`](../dags/README.md) 
 | `logging_config.py` | `configure_logging()` / `get_logger()`: one log format everywhere. |
 | `schemas.py` | Column contracts per layer (`RAW_COLUMNS`, `GOLD_COLUMNS`, feature lists, allowed categories), the Silver range rules (`ValidRange`), and the dataclasses passed between steps. |
 | `etl.py` | `extract_to_bronze`, `transform_to_silver` (`clean_orders`), `prepare_gold` (`add_features`), `validate_gold` (`check_gold`), `run_batch`. Every function takes a batch date and atomically rewrites that date's partition, which makes it idempotent. |
+| `db.py` | `load_gold_partition`: mirrors a validated Gold partition into the `gold_orders` table of the `processed` PostgreSQL database. It deletes that date's rows and then inserts the partition in one transaction, so it is idempotent. It is skipped when `PROCESSED_DB_URI` is empty. |
 | `train.py` | `load_gold_data`, `time_split`, `build_pipeline`, `train_model`, `evaluate_model` (`compute_metrics`), `save_model`, `run_training`. |
 
 ## Dataclasses (`schemas.py`)

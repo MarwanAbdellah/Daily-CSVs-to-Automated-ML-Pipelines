@@ -1,6 +1,7 @@
 """Daily medallion pipeline: one raw CSV per logical date -> Bronze/Silver/Gold.
 
 extract_to_bronze -> transform_to_silver -> prepare_gold -> validate_gold
+    -> load_gold_to_postgres
 
 The batch date is the run's logical date (``ds``), so scheduled runs, manual
 runs with a chosen logical date, reruns and backfills all process exactly one
@@ -12,6 +13,7 @@ from datetime import date, datetime, timedelta
 from airflow.sdk import dag, get_current_context, task
 
 from src.config import settings
+from src.db import load_gold_partition
 from src.etl import (
     extract_to_bronze,
     maybe_simulate_failure,
@@ -33,7 +35,7 @@ def _batch_date() -> date:
 
 @dag(
     dag_id="data_pipeline",
-    description="Daily orders CSV -> Bronze -> Silver -> Gold -> validation",
+    description="Daily orders CSV -> Bronze -> Silver -> Gold -> validate -> Postgres",
     schedule="@daily",
     start_date=datetime(2026, 10, 1),
     end_date=datetime(2026, 11, 15),
@@ -64,7 +66,13 @@ def data_pipeline():
     bronze = extract_to_bronze_task.override(task_id="extract_to_bronze")()
     silver = transform_to_silver_task.override(task_id="transform_to_silver")(bronze)
     gold = prepare_gold_task.override(task_id="prepare_gold")(silver)
-    validate_gold_task.override(task_id="validate_gold")(gold)
+
+    @task
+    def load_gold_to_postgres_task(report: dict) -> int:
+        return load_gold_partition(parse_batch_date(report["batch_date"]))
+
+    report = validate_gold_task.override(task_id="validate_gold")(gold)
+    load_gold_to_postgres_task.override(task_id="load_gold_to_postgres")(report)
 
 
 data_pipeline()

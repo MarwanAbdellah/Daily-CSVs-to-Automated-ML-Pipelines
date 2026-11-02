@@ -21,6 +21,8 @@ class Settings:
     environment: str = "development"
     test_fraction: float = 0.2
     random_state: int = 42
+    # SQLAlchemy URI of the processed-data database; empty disables the load
+    processed_db_uri: str = ""
     # Batch dates whose first attempt fails on purpose (retry evidence)
     simulate_failure_dates: tuple[str, ...] = field(default_factory=tuple)
 
@@ -53,6 +55,7 @@ class Settings:
             environment=os.getenv("ENVIRONMENT", defaults.environment),
             test_fraction=float(os.getenv("TEST_FRACTION", defaults.test_fraction)),
             random_state=int(os.getenv("RANDOM_STATE", defaults.random_state)),
+            processed_db_uri=os.getenv("PROCESSED_DB_URI", defaults.processed_db_uri),
             simulate_failure_dates=tuple(
                 d.strip() for d in failure_dates.split(",") if d.strip()
             ),

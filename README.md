@@ -22,7 +22,7 @@ models/               delivery_delay_model.joblib                   → models/R
 metrics/              metrics.json                                  → metrics/README.md
 screenshots/          Airflow UI evidence                           → screenshots/README.md
 Dockerfile            Airflow 3.3.2 image + project requirements
-docker-compose.yml    Postgres + API server + scheduler + DAG processor + triggerer
+docker-compose.yml    Postgres (metadata + processed DB) + API server + scheduler + DAG processor + triggerer
 requirements.txt      Pinned runtime deps (installed with Airflow constraints)
 pyproject.toml        Local dev environment (uv), ruff + black config
 run.py                Run the same pipelines without Airflow
@@ -86,6 +86,12 @@ Three dated batches were inspected in pandas, then the whole dataset:
   * duplicate `order_id`
   * `order_date` ≠ batch date
   * label ∉ {0,1}
+
+**PostgreSQL** (`feature/postgres-processed-data`): after validation, the `load_gold_to_postgres` task stores the partition in the `gold_orders` table of a separate `processed` database on the compose Postgres server. A one-shot `processed-db-init` service creates that database. The load deletes the date's rows and inserts them again in one transaction. Rerunning 2026-10-01 keeps 180 rows and 180 distinct `order_id`s. To inspect:
+
+```bash
+docker compose exec postgres psql -U airflow -d processed -c "SELECT order_date, COUNT(*) FROM gold_orders GROUP BY 1 ORDER BY 1"
+```
 
 **Idempotency.** Every write goes to a temp file and is then atomically renamed to `data/<layer>/date=YYYY-MM-DD/orders.csv`. A rerun replaces a date's partition and never appends to it.
 
