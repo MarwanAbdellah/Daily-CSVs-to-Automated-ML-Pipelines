@@ -18,8 +18,13 @@ dependencies = [
 dev = [
     "black>=26.10.0",
     "pre-commit>=4.6.2",
+    "pytest>=8.4.2",
     "ruff>=0.16.10",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
 
 [tool.black]
 line-length = 88

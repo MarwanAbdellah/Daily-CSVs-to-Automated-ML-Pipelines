@@ -8,7 +8,7 @@ Date-aware **delivery-delay prediction** for an Egyptian e-commerce operation.
 | Stage | DAG | Tasks |
 |---|---|---|
 | 01 Data engineering | `data_pipeline` (daily) | `extract_to_bronze → transform_to_silver → prepare_gold → validate_gold` |
-| 02 Orchestrated ML | `ml_training_pipeline` (manual) | `load_gold_data → train_model → evaluate_model → save_model` |
+| 02 Orchestrated ML | `ml_training_pipeline` (on Gold Asset update, or manual) | `load_gold_data → train_model → evaluate_model → save_model` |
 
 ## Repository layout
 
@@ -103,7 +103,7 @@ docker compose exec postgres psql -U airflow -d processed -c "SELECT order_date,
 * The batch date is the run's **logical date**, so each run processes exactly one source file.
 
 **`ml_training_pipeline`** ([dags/ml_training_pipeline.py](dags/ml_training_pipeline.py))
-* Triggered manually once Gold is valid; `retries=2`.
+* **Auto-triggered** (`feature/auto-trigger-ml`): `validate_gold` declares `outlets=[Asset("gold_orders")]`, and this DAG is `schedule=[Asset("gold_orders")]`. Every successful validation (scheduled run, rerun or backfill) queues a training run (`asset_triggered__�`). It can still be triggered manually. `retries=2`.
 * Tasks pass small JSON summaries through XCom. Data and the candidate model go through `data/ml/`.
 
 ## ML approach and leakage prevention ([src/train.py](src/train.py))
@@ -112,15 +112,15 @@ docker compose exec postgres psql -U airflow -d processed -c "SELECT order_date,
 * **Pipeline**: `ColumnTransformer` (numeric: median impute + `StandardScaler`; categorical: most-frequent impute + `OneHotEncoder(handle_unknown="ignore")`) → `LogisticRegression(class_weight="balanced")`.
   * The whole pipeline is fitted on training rows only.
   * The balanced class weights handle the 76/24 imbalance, which favours recall on late orders.
-* **Artifacts**: `models/delivery_delay_model.joblib` and `metrics/metrics.json`. The metrics file records accuracy / precision / recall / F1, the confusion matrix, the split strategy, the train/test dates and row counts, and the feature lists. After saving, a round-trip check confirms the reloaded model reproduces the evaluated predictions.
+* **Artifacts**: `models/delivery_delay_model.joblib` and `metrics/metrics.json`. The metrics file records accuracy / precision / recall / F1, the confusion matrix, the split strategy, the train/test dates and row counts, and the feature lists. **Versioning** (`feature/model-versioning`): every run also stores `models/versions/<UTC timestamp>/{model.joblib,metrics.json}`, and `metrics.json` carries the `model_version`. After saving, a round-trip check confirms the reloaded model reproduces the evaluated predictions.
 
-### Results (current run: 8 Gold dates)
+### Results (current run: 9 Gold dates, version v20261102T144818Z)
 
 | Split | Train rows | Test rows | Accuracy | Precision | Recall | F1 |
 |---|---|---|---|---|---|---|
-| latest 2 of 8 dates held out | 1,236 | 399 | 0.694 | 0.313 | 0.687 | 0.430 |
+| latest 2 of 9 dates held out | 1,455 | 399 | 0.689 | 0.311 | 0.702 | 0.431 |
 
-The model catches about 69 % of late deliveries at the cost of false alarms. That is a sensible trade-off when a missed late order costs more than a proactive customer notice.
+The model catches about 70 % of late deliveries at the cost of false alarms. That is a sensible trade-off when a missed late order costs more than a proactive customer notice.
 
 ## Setup and reproduction
 
@@ -159,7 +159,7 @@ docker compose exec airflow-scheduler airflow dags trigger ml_training_pipeline
 | Check | How |
 |---|---|
 | **Retry** | Set `SIMULATE_FAILURE_DATES=2026-10-05` in `.env`, run `docker compose up -d`, then trigger that date. `extract_to_bronze` fails attempt 1 with *Simulated transient failure* and succeeds on attempt 2. Clear the variable afterwards. |
-| **Same-date rerun** | `airflow tasks clear data_pipeline -s 2026-10-01 -e 2026-10-01 -y`, twice. Bronze/Silver/Gold checksums and row counts are identical (181 Gold rows) and there are no duplicate `order_id`s. |
+| **Same-date rerun** | `airflow tasks clear data_pipeline -s 2026-10-01 -e 2026-10-01 -y`, twice. Bronze/Silver/Gold checksums and row counts are identical (180 Gold rows) and there are no duplicate `order_id`s. |
 | **Backfill** | `airflow backfill create --dag-id data_pipeline --from-date 2026-10-18 --to-date 2026-10-20` produces `gold/date=2026-10-18`, `-19` and `-20`. |
 | **Monitoring** | Graph view, task states and task logs for both DAGs in the UI. Raw logs are in `logs/`. |
 
@@ -177,6 +177,18 @@ uv run python run.py etl --date 2026-10-01 --date 2026-10-02 --date 2026-10-03
 
 ```bash
 uv run python run.py train
+```
+
+### Tests (`feature/etl-tests`)
+
+25 pytest tests cover the Silver rules, every Gold validation failure, same-date idempotency, the time split, leakage-safe preprocessing and DAG integrity. See [tests/README.md](tests/README.md).
+
+```bash
+uv run pytest
+```
+
+```bash
+docker compose exec airflow-scheduler python -m pytest -p no:cacheprovider tests
 ```
 
 ## Optional bonus work

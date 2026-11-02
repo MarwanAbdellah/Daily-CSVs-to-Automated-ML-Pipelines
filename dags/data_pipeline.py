@@ -3,6 +3,9 @@
 extract_to_bronze -> transform_to_silver -> prepare_gold -> validate_gold
     -> load_gold_to_postgres
 
+A passing validate_gold updates the ``gold_orders`` Asset, which schedules
+ml_training_pipeline automatically.
+
 The batch date is the run's logical date (``ds``), so scheduled runs, manual
 runs with a chosen logical date, reruns and backfills all process exactly one
 dated source file and overwrite exactly one partition per layer.
@@ -10,9 +13,9 @@ dated source file and overwrite exactly one partition per layer.
 
 from datetime import date, datetime, timedelta
 
-from airflow.sdk import dag, get_current_context, task
+from airflow.sdk import Asset, dag, get_current_context, task
 
-from src.config import settings
+from src.config import GOLD_ASSET_NAME, settings
 from src.db import load_gold_partition
 from src.etl import (
     extract_to_bronze,
@@ -25,6 +28,8 @@ from src.etl import (
 from src.logging_config import configure_logging
 
 configure_logging(settings.log_level)
+
+gold_orders = Asset(GOLD_ASSET_NAME)
 
 
 def _batch_date() -> date:
@@ -59,18 +64,17 @@ def data_pipeline():
     def prepare_gold_task(silver: dict) -> dict:
         return prepare_gold(parse_batch_date(silver["batch_date"])).to_dict()
 
-    @task
+    @task(outlets=[gold_orders])
     def validate_gold_task(gold: dict) -> dict:
         return validate_gold(parse_batch_date(gold["batch_date"])).to_dict()
-
-    bronze = extract_to_bronze_task.override(task_id="extract_to_bronze")()
-    silver = transform_to_silver_task.override(task_id="transform_to_silver")(bronze)
-    gold = prepare_gold_task.override(task_id="prepare_gold")(silver)
 
     @task
     def load_gold_to_postgres_task(report: dict) -> int:
         return load_gold_partition(parse_batch_date(report["batch_date"]))
 
+    bronze = extract_to_bronze_task.override(task_id="extract_to_bronze")()
+    silver = transform_to_silver_task.override(task_id="transform_to_silver")(bronze)
+    gold = prepare_gold_task.override(task_id="prepare_gold")(silver)
     report = validate_gold_task.override(task_id="validate_gold")(gold)
     load_gold_to_postgres_task.override(task_id="load_gold_to_postgres")(report)
 

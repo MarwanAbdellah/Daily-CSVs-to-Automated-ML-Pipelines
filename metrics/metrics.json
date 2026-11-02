@@ -1,8 +1,9 @@
 {
+  "model_version": "v20261102T144818Z",
   "model_type": "LogisticRegression(class_weight='balanced') in a sklearn Pipeline",
-  "trained_at": "2026-11-02T12:52:06+00:00",
-  "gold_rows": 1635,
-  "gold_partitions": 8,
+  "trained_at": "2026-11-02T14:48:18+00:00",
+  "gold_rows": 1854,
+  "gold_partitions": 9,
   "features": {
     "categorical": [
       "customer_region",
@@ -29,11 +30,12 @@
     ]
   },
   "split": {
-    "strategy": "time-based: latest 2 of 8 dates held out",
+    "strategy": "time-based: latest 2 of 9 dates held out",
     "train_dates": [
       "2026-10-01",
       "2026-10-02",
       "2026-10-03",
+      "2026-10-04",
       "2026-10-05",
       "2026-10-18",
       "2026-10-19"
@@ -42,24 +44,24 @@
       "2026-10-20",
       "2026-11-02"
     ],
-    "train_rows": 1236,
+    "train_rows": 1455,
     "test_rows": 399,
-    "train_late_rate": 0.2411,
+    "train_late_rate": 0.2371,
     "test_late_rate": 0.1679
   },
   "metrics": {
-    "accuracy": 0.6942,
-    "precision": 0.3129,
-    "recall": 0.6866,
-    "f1": 0.4299,
+    "accuracy": 0.6892,
+    "precision": 0.3113,
+    "recall": 0.7015,
+    "f1": 0.4312,
     "confusion_matrix": [
       [
-        231,
-        101
+        228,
+        104
       ],
       [
-        21,
-        46
+        20,
+        47
       ]
     ]
   },

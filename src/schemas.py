@@ -183,6 +183,7 @@ class TrainingMetrics:
 class ModelReport:
     """Everything written to metrics/metrics.json next to the saved model."""
 
+    model_version: str
     model_type: str
     trained_at: str
     gold_rows: int
