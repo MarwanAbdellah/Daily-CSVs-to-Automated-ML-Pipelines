@@ -8,7 +8,7 @@ Date-aware **delivery-delay prediction** for an Egyptian e-commerce operation.
 | Stage | DAG | Tasks |
 |---|---|---|
 | 01 Data engineering | `data_pipeline` (daily) | `extract_to_bronze → transform_to_silver → prepare_gold → validate_gold` |
-| 02 Orchestrated ML | `ml_training_pipeline` (manual) | `load_gold_data → train_model → evaluate_model → save_model` |
+| 02 Orchestrated ML | `ml_training_pipeline` (on Gold Asset update, or manual) | `load_gold_data → train_model → evaluate_model → save_model` |
 
 ## Repository layout
 
@@ -97,7 +97,7 @@ Three dated batches were inspected in pandas, then the whole dataset:
 * The batch date is the run's **logical date**, so each run processes exactly one source file.
 
 **`ml_training_pipeline`** ([dags/ml_training_pipeline.py](dags/ml_training_pipeline.py))
-* Triggered manually once Gold is valid; `retries=2`.
+* **Auto-triggered** (`feature/auto-trigger-ml`): `validate_gold` declares `outlets=[Asset("gold_orders")]`, and this DAG is `schedule=[Asset("gold_orders")]`. Every successful validation (scheduled run, rerun or backfill) queues a training run (`asset_triggered__�`). It can still be triggered manually. `retries=2`.
 * Tasks pass small JSON summaries through XCom. Data and the candidate model go through `data/ml/`.
 
 ## ML approach and leakage prevention ([src/train.py](src/train.py))

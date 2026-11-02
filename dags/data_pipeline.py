@@ -2,6 +2,9 @@
 
 extract_to_bronze -> transform_to_silver -> prepare_gold -> validate_gold
 
+A passing validate_gold updates the ``gold_orders`` Asset, which schedules
+ml_training_pipeline automatically.
+
 The batch date is the run's logical date (``ds``), so scheduled runs, manual
 runs with a chosen logical date, reruns and backfills all process exactly one
 dated source file and overwrite exactly one partition per layer.
@@ -9,9 +12,9 @@ dated source file and overwrite exactly one partition per layer.
 
 from datetime import date, datetime, timedelta
 
-from airflow.sdk import dag, get_current_context, task
+from airflow.sdk import Asset, dag, get_current_context, task
 
-from src.config import settings
+from src.config import GOLD_ASSET_NAME, settings
 from src.etl import (
     extract_to_bronze,
     maybe_simulate_failure,
@@ -23,6 +26,8 @@ from src.etl import (
 from src.logging_config import configure_logging
 
 configure_logging(settings.log_level)
+
+gold_orders = Asset(GOLD_ASSET_NAME)
 
 
 def _batch_date() -> date:
@@ -57,7 +62,7 @@ def data_pipeline():
     def prepare_gold_task(silver: dict) -> dict:
         return prepare_gold(parse_batch_date(silver["batch_date"])).to_dict()
 
-    @task
+    @task(outlets=[gold_orders])
     def validate_gold_task(gold: dict) -> dict:
         return validate_gold(parse_batch_date(gold["batch_date"])).to_dict()
 

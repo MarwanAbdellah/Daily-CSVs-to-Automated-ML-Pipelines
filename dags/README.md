@@ -5,7 +5,7 @@ Airflow 3 DAG definitions. The DAGs only **orchestrate**. Every task calls a fun
 | Module | DAG id | Schedule | Tasks |
 |---|---|---|---|
 | `data_pipeline.py` | `data_pipeline` | `@daily`, 2026-10-01 → 2026-11-15, `catchup=False`, `max_active_runs=1` | `extract_to_bronze → transform_to_silver → prepare_gold → validate_gold` |
-| `ml_training_pipeline.py` | `ml_training_pipeline` | manual (`schedule=None`) | `load_gold_data → train_model → evaluate_model → save_model` |
+| `ml_training_pipeline.py` | `ml_training_pipeline` | `schedule=[Asset("gold_orders")]` + manual | `load_gold_data → train_model → evaluate_model → save_model` |
 
 Both DAGs use `retries=2` with a 30-second `retry_delay`.
 
@@ -17,5 +17,6 @@ Both DAGs use `retries=2` with a 30-second `retry_delay`.
 
 ## `ml_training_pipeline.py`
 
+- Scheduled on the `gold_orders` Asset (name in `src/config.py::GOLD_ASSET_NAME`). `validate_gold` in `data_pipeline` lists it as an outlet, so training starts automatically after every valid Gold update. A failed validation never updates the Asset, so it never triggers training.
 - XCom carries only summaries: row counts, the split and the metrics. The data and the candidate model move through files in `data/ml/`, so any task can be retried on its own.
 - `save_model` publishes `models/delivery_delay_model.joblib` and `metrics/metrics.json`.
