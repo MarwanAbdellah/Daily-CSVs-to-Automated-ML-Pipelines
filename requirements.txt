@@ -5,3 +5,5 @@ joblib==1.6.0
 pandas==3.0.5
 python-dotenv==1.2.3
 scikit-learn==1.9.1
+# Lets the test suite (including the DAG integrity tests) run in the container
+pytest==8.4.2

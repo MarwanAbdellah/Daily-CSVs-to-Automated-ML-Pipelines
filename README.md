@@ -173,6 +173,18 @@ uv run python run.py etl --date 2026-10-01 --date 2026-10-02 --date 2026-10-03
 uv run python run.py train
 ```
 
+### Tests (`feature/etl-tests`)
+
+25 pytest tests cover the Silver rules, every Gold validation failure, same-date idempotency, the time split, leakage-safe preprocessing and DAG integrity. See [tests/README.md](tests/README.md).
+
+```bash
+uv run pytest
+```
+
+```bash
+docker compose exec airflow-scheduler python -m pytest -p no:cacheprovider tests
+```
+
 ## Optional bonus work
 
 Each bonus lives on its own branch off `main`:
