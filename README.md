@@ -153,7 +153,7 @@ docker compose exec airflow-scheduler airflow dags trigger ml_training_pipeline
 | Check | How |
 |---|---|
 | **Retry** | Set `SIMULATE_FAILURE_DATES=2026-10-05` in `.env`, run `docker compose up -d`, then trigger that date. `extract_to_bronze` fails attempt 1 with *Simulated transient failure* and succeeds on attempt 2. Clear the variable afterwards. |
-| **Same-date rerun** | `airflow tasks clear data_pipeline -s 2026-10-01 -e 2026-10-01 -y`, twice. Bronze/Silver/Gold checksums and row counts are identical (181 Gold rows) and there are no duplicate `order_id`s. |
+| **Same-date rerun** | `airflow tasks clear data_pipeline -s 2026-10-01 -e 2026-10-01 -y`, twice. Bronze/Silver/Gold checksums and row counts are identical (180 Gold rows) and there are no duplicate `order_id`s. |
 | **Backfill** | `airflow backfill create --dag-id data_pipeline --from-date 2026-10-18 --to-date 2026-10-20` produces `gold/date=2026-10-18`, `-19` and `-20`. |
 | **Monitoring** | Graph view, task states and task logs for both DAGs in the UI. Raw logs are in `logs/`. |
 
