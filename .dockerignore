@@ -1,0 +1,24 @@
+# Everything below is mounted into the containers at runtime or not needed in the image
+.venv
+.git
+.gitignore
+.env
+.pytest_cache
+.ruff_cache
+.black_cache
+**/__pycache__
+**/*.pyc
+*.pdf
+*.zip
+*.md
+data
+logs
+models
+metrics
+screenshots
+tests
+dags
+src
+
+
+.dockerignore

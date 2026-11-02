@@ -1,0 +1,23 @@
+# Environments and secrets
+.venv/
+.env
+
+# Python / tooling caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.black_cache/
+
+# Assignment brief and source archive (not part of the project)
+*.pdf
+*.zip
+
+# Airflow runtime
+logs/
+config/airflow.cfg
+
+# Re-creatable training intermediates and partial writes
+data/ml/*
+!data/ml/README.md
+*.tmp

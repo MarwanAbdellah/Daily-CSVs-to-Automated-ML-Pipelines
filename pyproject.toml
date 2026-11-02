@@ -1,0 +1,30 @@
+[project]
+name = "delivery-delay-pipelines"
+version = "0.1.0"
+description = "Daily order CSVs to Bronze/Silver/Gold and a delivery-delay model, orchestrated with Apache Airflow"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+# Same pins as requirements.txt / the Airflow 3.3.2 constraints for Python 3.12,
+# so local runs and the Airflow containers behave identically.
+dependencies = [
+    "joblib==1.6.0",
+    "pandas==3.0.5",
+    "python-dotenv==1.2.3",
+    "scikit-learn==1.9.1",
+]
+
+[dependency-groups]
+dev = [
+    "black>=26.10.0",
+    "pre-commit>=4.6.2",
+    "ruff>=0.16.10",
+]
+
+[tool.black]
+line-length = 88
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
