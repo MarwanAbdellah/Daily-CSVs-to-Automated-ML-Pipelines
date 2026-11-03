@@ -1,0 +1,25 @@
+title Where each data problem is fixed
+subtitle Fixed rules run in Silver; anything learned from data runs inside the training pipeline
+dir right
+group silver Silver: fixed rules
+group ml Pipeline: learned on train dates
+bronze Bronze (cylinder) ~ The day's raw file, unchanged
+dup Duplicates: keep first in silver ~ 166 exact duplicate order IDs
+cat Spelling: canonical in silver ~ EXPRESS and ' standard ' become Express and Standard
+bad Invalid: set missing in silver ~ Distance or value at most 0, zero items
+rows Bad date/label: drop in silver ~ Row dropped and counted
+gold Gold (cylinder) ~ Validated features + target
+miss Missing: median in ml !accent ~ SimpleImputer fitted on training dates only
+scale Scale numbers in ml ~ StandardScaler
+onehot One-hot categories in ml ~ OneHotEncoder ignores unseen values
+bronze -> dup !muted
+bronze -> cat !muted
+bronze -> bad !muted
+bronze -> rows !muted
+dup -> gold !muted
+cat -> gold !muted
+bad -> gold !muted
+rows -> gold !muted
+gold -> miss !muted
+gold -> scale !muted
+gold -> onehot !muted
