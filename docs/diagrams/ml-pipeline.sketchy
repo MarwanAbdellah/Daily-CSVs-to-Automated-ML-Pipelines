@@ -1,0 +1,22 @@
+title Leakage-safe training
+subtitle Every learned step sits inside one sklearn Pipeline, fitted on earlier dates and scored on later ones
+dir down
+group split Time-based split
+group pipe sklearn Pipeline
+gold Gold partitions (cylinder) ~ All validated dates combined
+traind Earliest 80% of dates in split ~ Training rows
+testd Latest 20% of dates in split ~ Never seen during fit
+num Numeric: median + scaler in pipe ~ SimpleImputer + StandardScaler
+cat Categorical: mode + one-hot in pipe ~ SimpleImputer + OneHotEncoder
+lr Logistic regression in pipe !accent ~ class_weight balanced for the 76/24 split
+metrics metrics.json (note) ~ Accuracy, precision, recall, F1, confusion matrix
+model Model .joblib (note) ~ Plus models/versions/<timestamp>/
+gold -> traind
+gold -> testd
+traind -> num fit
+traind -> cat fit
+num -> lr
+cat -> lr
+lr -> model
+testd --> metrics evaluate
+lr --> metrics

@@ -1,0 +1,27 @@
+title Delivery-delay pipelines on Apache Airflow
+subtitle 46 daily order CSVs to a validated, versioned model, all inside Docker Compose
+dir down
+group compose Docker Compose
+group dp data_pipeline (daily) in compose
+group ml ml_training_pipeline in compose
+raw Raw CSVs @file-text ~ 46 files orders_YYYY-MM-DD.csv, never modified
+bronze Bronze in dp ~ Unchanged copy of the day's file
+silver Silver in dp ~ Deduplicated, standardised, invalid values set to missing
+gold Gold in dp ~ Model features + target, one partition per date
+validate Validate Gold in dp !accent ~ Fails on empty data, missing columns, duplicate IDs, wrong dates, bad labels
+pg Postgres processed (cylinder) in compose ~ gold_orders table, replaced per date
+asset gold_orders Asset (note) in compose ~ Updated only when validation passes
+load Load Gold in ml ~ Concatenate every Gold partition
+train Train model in ml ~ Time-based split, sklearn Pipeline fitted on train dates
+evaluate Evaluate in ml ~ Accuracy, precision, recall, F1 on later dates
+save Save model in ml ~ joblib model, metrics.json and a version folder
+raw -> bronze
+bronze -> silver
+silver -> gold
+gold -> validate
+validate -> pg load
+validate --> asset updates
+asset --> load triggers
+load -> train
+train -> evaluate
+evaluate -> save
