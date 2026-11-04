@@ -1,0 +1,71 @@
+{
+  "model_version": "v20261104T145945Z",
+  "model_type": "LogisticRegression(class_weight='balanced') in a sklearn Pipeline",
+  "trained_at": "2026-11-04T14:59:45+00:00",
+  "gold_rows": 2305,
+  "gold_partitions": 11,
+  "features": {
+    "categorical": [
+      "customer_region",
+      "warehouse_id",
+      "shipping_method",
+      "weather_risk_level"
+    ],
+    "numeric": [
+      "order_hour",
+      "distance_km",
+      "items_count",
+      "package_weight_kg",
+      "order_value_egp",
+      "promised_delivery_days",
+      "warehouse_load_pct",
+      "carrier_on_time_rate"
+    ],
+    "engineered": [
+      "day_of_week",
+      "is_weekend",
+      "is_after_cutoff",
+      "weight_per_item",
+      "distance_per_promised_day"
+    ]
+  },
+  "split": {
+    "strategy": "time-based: latest 2 of 11 dates held out",
+    "train_dates": [
+      "2026-10-01",
+      "2026-10-02",
+      "2026-10-03",
+      "2026-10-04",
+      "2026-10-05",
+      "2026-10-18",
+      "2026-10-19",
+      "2026-10-20",
+      "2026-11-02"
+    ],
+    "test_dates": [
+      "2026-11-03",
+      "2026-11-04"
+    ],
+    "train_rows": 1854,
+    "test_rows": 451,
+    "train_late_rate": 0.2222,
+    "test_late_rate": 0.1951
+  },
+  "metrics": {
+    "accuracy": 0.6497,
+    "precision": 0.2989,
+    "recall": 0.5909,
+    "f1": 0.3969,
+    "confusion_matrix": [
+      [
+        241,
+        122
+      ],
+      [
+        36,
+        52
+      ]
+    ]
+  },
+  "model_path": "models/delivery_delay_model.joblib"
+}

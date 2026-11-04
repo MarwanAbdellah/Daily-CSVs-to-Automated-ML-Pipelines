@@ -162,23 +162,23 @@ A rule that gives the same answer whatever data comes later belongs in **Silver*
 
 ## 📊 Evaluation Results
 
-Current model `v20261102T144818Z`, trained on 9 Gold dates. It was trained on 7 dates (1,455 rows) and tested on the 2 latest dates, 2026-10-20 and 2026-11-02 (399 rows):
+The current model is `v20261104T150003Z`, retrained automatically when the 2026-11-04 Gold partition landed. Of the 11 Gold dates, it was trained on 9 (1,854 rows) and tested on the 2 latest, 2026-11-03 and 2026-11-04 (451 rows):
 
 | Metric | Value |
 |--------|-------|
-| **Accuracy** | **0.6892** |
-| Precision (late) | 0.3113 |
-| **Recall (late)** | **0.7015** |
-| F1 (late) | 0.4312 |
+| **Accuracy** | **0.6497** |
+| Precision (late) | 0.2989 |
+| **Recall (late)** | **0.5909** |
+| F1 (late) | 0.3969 |
 
 Confusion matrix (`[[TN, FP], [FN, TP]]`):
 
 ```
-[[228 104]
- [ 20  47]]
+[[241 122]
+ [ 36  52]]
 ```
 
-The balanced class weights trade precision for recall: the model catches **70 % of late deliveries** at the cost of false alarms. That is the right trade-off when a missed late order costs more than a proactive customer notice. The full report, with split dates, late rates and feature lists, is in [metrics/metrics.json](metrics/metrics.json).
+The balanced class weights trade precision for recall: the model catches **about 59 % of late deliveries** at the cost of false alarms. That is the right trade-off when a missed late order costs more than a proactive customer notice. The full report, with split dates, late rates and feature lists, is in [metrics/metrics.json](metrics/metrics.json).
 
 ---
 
@@ -298,7 +298,11 @@ The suite covers the Silver rules, every Gold validation failure, byte-identical
 | **Auto-trigger** | Any successful `data_pipeline` run | An `asset_triggered__…` run of `ml_training_pipeline` |
 | **Monitoring** | Graph view, task tries and logs in the UI | Raw task logs are also in `logs/` |
 
-The UI evidence is in [screenshots/](screenshots/README.md).
+All evidence screenshots are in [screenshots/](screenshots/README.md). Three key ones:
+
+| Retry (try 1 ✗, try 2 ✓) | Same-date rerun (5 tries, same rows) | Backfill (3 dates) |
+|---|---|---|
+| ![Retry proof](screenshots/04_retry_proof.png) | ![Same-date rerun](screenshots/05_same_date_rerun.png) | ![Backfill](screenshots/06_backfill.png) |
 
 ---
 

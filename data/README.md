@@ -14,4 +14,5 @@ The committed partitions come from the evidence runs:
 
 - 2026-10-01, -02, -03 and -05: manual runs, including the retry
 - 2026-10-18, -19 and -20: backfill
-- 2026-11-02: the scheduled run on the day the DAG was unpaused
+- 2026-10-04: the manual run whose valid Gold auto-triggered training
+- 2026-11-02, -03 and -04: scheduled daily runs
