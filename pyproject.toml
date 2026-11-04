@@ -21,6 +21,14 @@ dev = [
     "pytest>=8.4.2",
     "ruff>=0.16.10",
 ]
+# Notebook-only tooling: uv sync --group experiments
+experiments = [
+    "ipykernel>=7.4.0",
+    "matplotlib>=3.11.2",
+    "nbconvert>=7.17.2",
+    "nbformat>=5.11.1",
+    "seaborn>=0.13.2",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -31,6 +39,7 @@ line-length = 88
 
 [tool.ruff]
 line-length = 88
+extend-exclude = ["notebooks"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]

@@ -97,7 +97,7 @@ Each bonus was built on its own branch and merged through a pull request:
 | Numeric | `order_hour`, `distance_km`, `items_count`, `package_weight_kg`, `order_value_egp`, `promised_delivery_days`, `warehouse_load_pct`, `carrier_on_time_rate` |
 | Label | `late_delivery` (binary) |
 
-Three dated batches were inspected in pandas, then the whole dataset:
+Three dated batches were inspected in pandas, then the whole dataset. The full analysis, with charts, is in [notebooks/01_eda.ipynb](notebooks/01_eda.ipynb).
 
 | Batch | Rows | Duplicate IDs | Missing values | Invalid values | Non-canonical `shipping_method` | Late % |
 |-------|------|---------------|----------------|----------------|---------------------------------|--------|
@@ -109,6 +109,8 @@ Three dated batches were inspected in pandas, then the whole dataset:
 - Every duplicate is an exact copy of another row.
 - All labels are valid 0/1, and every `order_date` matches its file's date.
 - The classes are imbalanced, about 76 / 24.
+- The late rate **drifts upward from 2026-11-06** (25–34 % vs mostly 20–25 % in October). That is why the train/test split is by date.
+- The strongest signals are warehouse load, short delivery promises, high weather risk and Same_Day shipping. Every single-feature correlation is weak (|r| ≤ 0.18).
 
 ---
 
@@ -200,6 +202,10 @@ The balanced class weights trade precision for recall: the model catches **about
 - **uv** for the local environment (`uv.lock` committed)
 - **Ruff**, **Black** and **pre-commit**
 - **pytest** (25 tests)
+
+### Exploration (notebook only: `uv sync --group experiments`)
+- Jupyter / ipykernel, nbconvert, Matplotlib and Seaborn for [notebooks/01_eda.ipynb](notebooks/01_eda.ipynb)
+- None of these are installed in the Airflow image or imported by `src/` or `dags/`
 
 ### Diagrams
 - Hand-drawn diagrams made with [Sketchy](https://github.com/ddkbs/sketchy). Sources are in [docs/diagrams](docs/README.md).
@@ -321,6 +327,8 @@ Daily-CSVs-to-Automated-ML-Pipelines/
 │   ├── train.py                    # Load Gold, time split, Pipeline, metrics, save
 │   └── db.py                       # Idempotent Gold load into Postgres
 ├── tests/                          # 25 pytest tests (ETL, training, DAG integrity)
+├── notebooks/
+│   └── 01_eda.ipynb                # Stage A: EDA of 3 dated batches + all 46 files
 ├── data/
 │   ├── raw/                        # 46 source CSVs, never modified
 │   ├── bronze/ silver/ gold/       # date=YYYY-MM-DD/orders.csv partitions
