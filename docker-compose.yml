@@ -42,6 +42,10 @@ services:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
       POSTGRES_DB: airflow
+    # Reachable from the host (pgAdmin, DBeaver, psql) at localhost:5432, user
+    # airflow / airflow; set POSTGRES_HOST_PORT if 5432 is already taken
+    ports:
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
     healthcheck:

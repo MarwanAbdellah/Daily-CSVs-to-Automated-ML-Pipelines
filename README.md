@@ -233,6 +233,7 @@ cp .env.example .env
 | `RANDOM_STATE` | `42` | Model seed |
 | `SIMULATE_FAILURE_DATES` | *(empty)* | Comma-separated dates whose first attempt fails (retry demo) |
 | `PROCESSED_DB_URI` | set by compose | Postgres target for Gold; empty skips the load |
+| `POSTGRES_HOST_PORT` | `5432` | Host port for connecting to Postgres from pgAdmin, DBeaver or psql |
 
 ### 2. Open the UI and unpause both DAGs
 Open <http://localhost:8080> and log in as `airflow` / `airflow`. DAGs start **paused**. Unpause both, with the UI toggles or:
@@ -254,10 +255,20 @@ docker compose exec airflow-scheduler airflow dags trigger ml_training_pipeline
 ### 4. Inspect the outputs
 - Layers: `data/bronze|silver|gold/date=YYYY-MM-DD/orders.csv`
 - Model and metrics: `models/delivery_delay_model.joblib`, `metrics/metrics.json`, `models/versions/`
-- Processed database:
+- Processed database: from inside Docker, run
 ```bash
 docker compose exec postgres psql -U airflow -d processed -c "SELECT order_date, COUNT(*) FROM gold_orders GROUP BY 1 ORDER BY 1"
 ```
+  You can also use any client on your machine (pgAdmin, DBeaver, psql):
+
+  | Setting | Value |
+  |---|---|
+  | Host / port | `localhost` / `5432` (change it with `POSTGRES_HOST_PORT` if a local PostgreSQL already uses 5432) |
+  | Database | `processed` |
+  | User / password | `airflow` / `airflow` |
+  | Table | `gold_orders` |
+
+  The table holds every date that `data_pipeline` has run since the database was created. Each date's row count equals its Gold file's row count.
 
 ### 5. Without Airflow (optional)
 ```bash
